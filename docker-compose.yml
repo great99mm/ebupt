@@ -28,9 +28,9 @@ services:
     environment:
       DATABASE_URL: postgres://ebupteam:ebupteam@postgres:5432/ebupteam
       REDIS_URL: redis://redis:6379
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      WEBHOOK_TOKEN: ${WEBHOOK_TOKEN}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      WEBHOOK_TOKEN: ${WEBHOOK_TOKEN:-}
     ports:
       - "18080:8080"
 volumes:

@@ -8,7 +8,7 @@ use axum::{
     Json, Router,
 };
 use chrono::{DateTime, Duration, Utc};
-use rand_core::OsRng;
+use rand_core::{OsRng, RngCore};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -51,11 +51,23 @@ async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
     tracing_subscriber::fmt().with_env_filter("info,tower_http=info").init();
     let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| "postgres://ebupteam:ebupteam@localhost:5432/ebupteam".into());
+    let admin_username = env_value("ADMIN_USERNAME").unwrap_or_else(|| "admin".into());
+    let (admin_password, generated_admin_password) = secret_or_generated("ADMIN_PASSWORD", 24);
+    let (webhook_token, generated_webhook_token) = secret_or_generated("WEBHOOK_TOKEN", 32);
+    if generated_admin_password {
+        tracing::warn!("ADMIN_PASSWORD was not set; generated admin password for user '{admin_username}': {admin_password}");
+    }
+    if generated_webhook_token {
+        tracing::warn!("WEBHOOK_TOKEN was not set; generated webhook token: {webhook_token}");
+    }
     let db = connect_db(&database_url).await?;
     migrate(&db).await?;
-    seed_admin(&db).await?;
+    let admin_created = seed_admin(&db, &admin_username, &admin_password).await?;
+    if generated_admin_password && !admin_created {
+        tracing::warn!("user '{admin_username}' already exists; generated ADMIN_PASSWORD was not applied to the stored account");
+    }
     if let Ok(redis_url) = env::var("REDIS_URL") { let _ = redis::Client::open(redis_url).and_then(|c| c.get_connection()).map_err(|e| tracing::warn!("redis unavailable: {e}")); }
-    let state = AppState { db, http: reqwest::Client::new(), webhook_token: env::var("WEBHOOK_TOKEN").unwrap_or_else(|_| "change-me".into()) };
+    let state = AppState { db, http: reqwest::Client::new(), webhook_token };
     let api = Router::new()
         .route("/api/auth/login", post(login)).route("/api/auth/logout", post(logout)).route("/api/me", get(me)).route("/api/me/password", post(change_password))
         .route("/api/users", get(list_users).post(create_user)).route("/api/users/:id", post(update_user)).route("/api/users/:id/delete", post(delete_user))
@@ -99,7 +111,10 @@ async fn migrate(db: &PgPool) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn seed_admin(db: &PgPool) -> anyhow::Result<()> { let u = env::var("ADMIN_USERNAME").unwrap_or_else(|_| "admin".into()); let p = env::var("ADMIN_PASSWORD").unwrap_or_else(|_| "admin123".into()); let hash = hash_password(&p)?; sqlx::query("INSERT INTO users(username,password_hash,is_admin,visible_roots) VALUES($1,$2,true,'[]') ON CONFLICT(username) DO NOTHING").bind(u).bind(hash).execute(db).await?; Ok(()) }
+fn env_value(name: &str) -> Option<String> { env::var(name).ok().map(|v| v.trim().to_string()).filter(|v| !v.is_empty()) }
+fn random_hex(bytes: usize) -> String { let mut raw = vec![0_u8; bytes]; OsRng.fill_bytes(&mut raw); hex::encode(raw) }
+fn secret_or_generated(name: &str, bytes: usize) -> (String, bool) { env_value(name).map(|v| (v, false)).unwrap_or_else(|| (random_hex(bytes), true)) }
+async fn seed_admin(db: &PgPool, username: &str, password: &str) -> anyhow::Result<bool> { let hash = hash_password(password)?; let result = sqlx::query("INSERT INTO users(username,password_hash,is_admin,visible_roots) VALUES($1,$2,true,'[]') ON CONFLICT(username) DO NOTHING").bind(username).bind(hash).execute(db).await?; Ok(result.rows_affected() > 0) }
 fn hash_password(p: &str) -> anyhow::Result<String> { Ok(Argon2::default().hash_password(p.as_bytes(), &SaltString::generate(&mut OsRng)).map_err(|e| anyhow!(e.to_string()))?.to_string()) }
 fn token_hash(t: &str) -> String { hex::encode(Sha256::digest(t.as_bytes())) }
 
