@@ -1,0 +1,8 @@
+.slim/deepwork/
+.codegraph/
+target/
+node_modules/
+dist/
+.env
+.env.local
+data/

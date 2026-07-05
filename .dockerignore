@@ -1,0 +1,6 @@
+target
+backend/target
+.git
+.slim
+node_modules
+frontend/node_modules
