@@ -62,9 +62,9 @@ export default function Hall() {
           <MediaPosterCard
             key={item.id}
             item={item}
-            statusLabel={item.available ? '可认领' : '已占用'}
-            statusClass={item.available ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-amber-50 text-amber-700 ring-amber-100'}
-            subtitle={item.available ? '待认领' : '已被占用'}
+            statusLabel="可认领"
+            statusClass="bg-emerald-50 text-emerald-700 ring-emerald-100"
+            subtitle="待认领"
             onClick={() => setActiveItem(item)}
           />
         ))}
@@ -74,7 +74,7 @@ export default function Hall() {
         <div className="card p-10 text-center text-sm text-slate-500">
           <FolderHeart className="mx-auto h-8 w-8 text-primary-500" />
           <div className="mt-3 font-semibold text-slate-900">没有内容</div>
-          <div className="mt-1">先拉取数据，或检查后端源。</div>
+          <div className="mt-1">Webhook 创建的新任务会出现在这里。</div>
         </div>
       ) : null}
 

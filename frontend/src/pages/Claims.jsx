@@ -24,7 +24,7 @@ export default function Claims() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-2xl font-bold text-slate-900">我的认领</div>
-          <p className="mt-1 text-sm text-slate-500">处理已认领项目</p>
+          <p className="mt-1 text-sm text-slate-500">刷新比对入库状态，完整后归档</p>
         </div>
         <button
           type="button"
@@ -45,9 +45,9 @@ export default function Claims() {
           <MediaPosterCard
             key={job.id}
             item={job}
-            statusLabel={job.status === 'submitted' ? '已提交' : job.status === 'claimed' ? '处理中' : '待处理'}
-            statusClass={job.status === 'submitted' ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : job.status === 'claimed' ? 'bg-blue-50 text-blue-700 ring-blue-100' : 'bg-slate-100 text-slate-600 ring-slate-200'}
-            subtitle={job.status === 'submitted' ? '已进入后台' : '待维护'}
+            statusLabel={job.compare?.complete ? '可归档' : '处理中'}
+            statusClass={job.compare?.complete ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-blue-50 text-blue-700 ring-blue-100'}
+            subtitle={job.compare?.checked_at ? `完整度 ${Math.round(job.compare.progress || 0)}%` : '待刷新'}
             onClick={() => setActiveJob(job)}
           />
         ))}
@@ -57,7 +57,7 @@ export default function Claims() {
         <div className="card p-10 text-center text-sm text-slate-500">
           <ClipboardList className="mx-auto h-8 w-8 text-primary-500" />
           <div className="mt-3 font-semibold text-slate-900">暂无认领</div>
-          <div className="mt-1">从大厅或 Emby 创建一个任务后会出现在这里。</div>
+          <div className="mt-1">从大厅认领任务后会出现在这里。</div>
         </div>
       ) : null}
 

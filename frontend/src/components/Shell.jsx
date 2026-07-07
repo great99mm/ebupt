@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Building2, ClipboardList, Clapperboard, KeyRound, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, UserRound } from 'lucide-react';
+import { Archive, Building2, ClipboardList, Clapperboard, KeyRound, LogOut, PanelLeftClose, PanelLeftOpen, Settings2, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import { useApp } from '../store';
 import { joinClasses } from '../utils';
@@ -8,7 +8,7 @@ import Modal from './Modal';
 const tabs = [
   { path: '/hall', label: '大厅', icon: Building2 },
   { path: '/claims', label: '我的认领', icon: ClipboardList },
-  { path: '/emby', label: 'Emby', icon: Clapperboard },
+  { path: '/archives', label: '我的归档', icon: Archive },
   { path: '/settings', label: '设置', icon: Settings2, adminOnly: true },
 ];
 
@@ -42,7 +42,7 @@ export default function Shell({ children }) {
             </div>
             <div className={sidebarCollapsed ? 'hidden' : ''}>
               <div className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-500">Ebupteam</div>
-              <div className="text-sm font-semibold leading-tight text-slate-900">维护面板</div>
+              <div className="text-sm font-semibold leading-tight text-slate-900">认领面板</div>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function Shell({ children }) {
         <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-white/90 backdrop-blur md:block">
           <div className="flex h-14 items-center justify-between px-4 md:px-6">
             <div className="hidden md:block">
-              <div className="text-sm font-medium text-slate-500">媒体认领与维护</div>
+              <div className="text-sm font-medium text-slate-500">任务认领与归档</div>
             </div>
             <div className="hidden md:block" />
           </div>

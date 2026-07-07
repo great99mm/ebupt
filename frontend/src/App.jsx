@@ -5,7 +5,7 @@ import Shell from './components/Shell';
 import Login from './pages/Login';
 import Hall from './pages/Hall';
 import Claims from './pages/Claims';
-import Emby from './pages/Emby';
+import Archives from './pages/Archives';
 import Settings from './pages/Settings';
 
 function GuardedApp() {
@@ -25,7 +25,7 @@ function GuardedApp() {
         <Route path="/" element={<Navigate to="/hall" replace />} />
         <Route path="/hall" element={<Hall />} />
         <Route path="/claims" element={<Claims />} />
-        <Route path="/emby" element={<Emby />} />
+        <Route path="/archives" element={<Archives />} />
         <Route path="/settings" element={user?.is_admin ? <Settings /> : <Navigate to="/hall" replace />} />
         <Route path="*" element={<Navigate to="/hall" replace />} />
       </Routes>

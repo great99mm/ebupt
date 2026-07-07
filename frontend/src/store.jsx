@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from './api';
-import { normalizeBrowseItems, normalizeCategories } from './utils';
 
 const AppContext = createContext(null);
 
@@ -17,12 +16,11 @@ export function AppProvider({ children }) {
   const [hall, setHall] = useState({ items: [], loading: false, error: '' });
   const [emby, setEmby] = useState({ items: [], loading: false, error: '' });
   const [claims, setClaims] = useState({ jobs: [], loading: false, error: '' });
-  const [categories, setCategories] = useState({ items: [], loading: false, error: '' });
+  const [archives, setArchives] = useState({ jobs: [], loading: false, error: '' });
   const [settings, setSettings] = useState({ data: null, loading: false, error: '' });
   const [users, setUsers] = useState({ items: [], loading: false, error: '' });
   const [notice, setNotice] = useState('');
   const [wizardJobId, setWizardJobId] = useState(null);
-  const [wizardSeedPath, setWizardSeedPath] = useState('');
 
   const clearSession = () => {
     localStorage.removeItem('ebupteam_token');
@@ -31,11 +29,10 @@ export function AppProvider({ children }) {
     setHall({ items: [], loading: false, error: '' });
     setEmby({ items: [], loading: false, error: '' });
     setClaims({ jobs: [], loading: false, error: '' });
-    setCategories({ items: [], loading: false, error: '' });
+    setArchives({ jobs: [], loading: false, error: '' });
     setSettings({ data: null, loading: false, error: '' });
     setUsers({ items: [], loading: false, error: '' });
     setWizardJobId(null);
-    setWizardSeedPath('');
   };
 
   const handleAuthError = (err) => {
@@ -75,15 +72,15 @@ export function AppProvider({ children }) {
     }
   };
 
-  const loadCategories = async (authToken = token) => {
-    setCategories((prev) => ({ ...prev, loading: true, error: '' }));
+  const loadArchives = async (authToken = token) => {
+    setArchives((prev) => ({ ...prev, loading: true, error: '' }));
     try {
-      const data = await api('/api/categories', {}, authToken);
-      setCategories({ items: normalizeCategories(data), loading: false, error: '' });
-      return normalizeCategories(data);
+      const data = await api('/api/my-archives', {}, authToken);
+      setArchives({ jobs: data.jobs || [], loading: false, error: '' });
+      return data.jobs || [];
     } catch (err) {
       handleAuthError(err);
-      setCategories((prev) => ({ ...prev, loading: false, error: toErrorMessage(err) }));
+      setArchives((prev) => ({ ...prev, loading: false, error: toErrorMessage(err) }));
       throw err;
     }
   };
@@ -122,7 +119,7 @@ export function AppProvider({ children }) {
     setBooting(true);
     try {
       const me = await loadMe(authToken);
-      await Promise.all([loadSection('hall', authToken), loadSection('emby', authToken), loadClaims(authToken), loadCategories(authToken)]);
+      await Promise.all([loadSection('hall', authToken), loadClaims(authToken), loadArchives(authToken)]);
       if (me?.is_admin) await Promise.all([loadSettings(authToken), loadUsers(authToken)]);
       setNotice('');
     } catch (err) {
@@ -171,33 +168,7 @@ export function AppProvider({ children }) {
   const releaseJob = async (jobId) => {
     await api(`/api/jobs/${jobId}/release`, { method: 'POST' }, token);
     setNotice('已释放');
-    await Promise.all([loadClaims(), loadSection('hall'), loadSection('emby')]);
-  };
-
-  const loadBrowse = async (path) => {
-    const qs = new URLSearchParams({ path });
-    const data = await api(`/api/openlist/browse?${qs.toString()}`, {}, token);
-    return normalizeBrowseItems(data);
-  };
-
-  const selectJob = async (jobId, payload) => {
-    const data = await api(`/api/jobs/${jobId}/select`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }, token);
-    setWizardSeedPath(payload.path || '');
-    await loadClaims();
-    return data;
-  };
-
-  const submitJob = async (jobId, payload) => {
-    const data = await api(`/api/jobs/${jobId}/submit`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }, token);
-    setNotice('已提交');
-    await Promise.all([loadClaims(), loadSection('hall'), loadSection('emby')]);
-    return data;
+    await Promise.all([loadClaims(), loadSection('hall')]);
   };
 
   const saveSettings = async (payload) => {
@@ -234,7 +205,6 @@ export function AppProvider({ children }) {
 
   const refreshEmby = async () => {
     const data = await api('/api/emby/refresh', { method: 'POST' }, token);
-    await loadSection('emby');
     return data;
   };
 
@@ -248,7 +218,7 @@ export function AppProvider({ children }) {
   const archiveJob = async (jobId) => {
     const data = await api(`/api/jobs/${jobId}/archive`, { method: 'POST' }, token);
     setNotice('已归档');
-    await Promise.all([loadClaims(), loadSection('hall'), loadSection('emby')]);
+    await Promise.all([loadClaims(), loadArchives(), loadSection('hall')]);
     return data;
   };
 
@@ -259,28 +229,23 @@ export function AppProvider({ children }) {
     hall,
     emby,
     claims,
-    categories,
+    archives,
     settings,
     users,
     notice,
     setNotice,
     wizardJobId,
     setWizardJobId,
-    wizardSeedPath,
-    setWizardSeedPath,
     login,
     logout,
     bootstrap,
     loadSection,
     loadClaims,
-    loadCategories,
+    loadArchives,
     loadSettings,
     loadUsers,
-    loadBrowse,
     claimItem,
     releaseJob,
-    selectJob,
-    submitJob,
     saveSettings,
     changePassword,
     createUser,
@@ -289,7 +254,7 @@ export function AppProvider({ children }) {
     refreshEmby,
     compareJob,
     archiveJob,
-  }), [token, user, booting, hall, emby, claims, categories, settings, users, notice, wizardJobId, wizardSeedPath]);
+  }), [token, user, booting, hall, emby, claims, archives, settings, users, notice, wizardJobId]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

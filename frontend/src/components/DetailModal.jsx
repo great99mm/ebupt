@@ -13,7 +13,7 @@ export default function DetailModal({ item, section, claimLabel = '我要认领'
   }, [job, claims.jobs, item?.id]);
 
   const active = currentJob && currentJob.status !== 'released' && currentJob.status !== 'completed';
-  const ownerLabel = active ? (currentJob.category ? `类别 ${currentJob.category}` : '维护中') : '';
+  const ownerLabel = active ? '已认领' : '';
 
   return (
     <Modal
@@ -47,7 +47,7 @@ export default function DetailModal({ item, section, claimLabel = '我要认领'
                     await onClaim?.();
                     setPending(false);
                   }}
-                  disabled={locked && section === 'emby' && active && currentJob?.status !== 'claimed'}
+                  disabled={locked && !currentJob}
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   确认
@@ -75,7 +75,7 @@ export default function DetailModal({ item, section, claimLabel = '我要认领'
 
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <span className="badge bg-primary-50 text-primary-700 ring-primary-100">{section === 'emby' ? 'Emby' : '大厅'}</span>
+            <span className="badge bg-primary-50 text-primary-700 ring-primary-100">大厅</span>
             <span className="badge bg-slate-100 text-slate-600 ring-slate-200">{itemTypeLabel(item?.media_type)}</span>
             {active ? <span className="badge bg-amber-50 text-amber-700 ring-amber-100">{currentJob?.status || '维护中'}</span> : null}
           </div>
@@ -114,7 +114,7 @@ export default function DetailModal({ item, section, claimLabel = '我要认领'
 
           {active ? (
             <div className="rounded-lg border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">
-              <div className="font-semibold">当前已有维护任务</div>
+              <div className="font-semibold">当前已有认领任务</div>
               <div className="mt-1">如果这是你的任务，请到“我的认领”继续处理。</div>
             </div>
           ) : null}
