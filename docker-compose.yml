@@ -1,37 +1,15 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: ebupteam
-      POSTGRES_USER: ebupteam
-      POSTGRES_PASSWORD: ebupteam
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ebupteam -d ebupteam"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
   app:
     image: dedehao/ebupt:latest
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
     environment:
-      DATABASE_URL: postgres://ebupteam:ebupteam@postgres:5432/ebupteam
-      REDIS_URL: redis://redis:6379
+      DATABASE_URL: sqlite:/data/ebupt.db
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       WEBHOOK_TOKEN: ${WEBHOOK_TOKEN:-}
     ports:
       - "18080:8080"
+    volumes:
+      - ebupt_data:/data
+
 volumes:
-  postgres_data:
+  ebupt_data:
